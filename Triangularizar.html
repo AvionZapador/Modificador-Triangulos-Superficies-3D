@@ -36,11 +36,17 @@ th{color:var(--mut);font-weight:600;text-align:center;padding:2px}
 td{padding:1px}
 td input{width:100%;padding:3px;border:1px solid var(--bd);border-radius:4px;font:inherit}
 td.n{width:22px;text-align:center;color:var(--mut)}
-#hud{position:absolute;left:10px;top:10px;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:12px;pointer-events:none}
-#hint{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;font-size:12px;color:var(--mut);pointer-events:none}
+#hud{position:absolute;right:10px;bottom:10px;max-width:calc(100% - 140px);text-align:right;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:12px;pointer-events:none}
+#hint{position:absolute;left:10px;top:48px;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;font-size:12px;color:var(--mut);pointer-events:none}
 #toast{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);background:#1d2733;color:#fff;padding:7px 12px;border-radius:6px;font-size:13px;display:none;max-width:80%;text-align:center}
 #boxsel{position:absolute;border:1.5px dashed #0f766e;background:rgba(15,118,110,.14);display:none;pointer-events:none;z-index:5}
-#rotulo{position:absolute;right:10px;bottom:10px;background:rgba(15,61,58,.93);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;pointer-events:none;max-width:70%;text-align:right}
+#rotulo{position:absolute;left:10px;right:10px;top:10px;text-align:center;background:rgba(15,61,58,.93);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;pointer-events:none;}
+#zoombar{position:absolute;left:10px;top:calc(50% - 80px);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:4;user-select:none;-webkit-user-select:none;touch-action:none}
+#zoombar button{width:44px;height:44px;padding:0;font-size:26px;line-height:1;font-weight:700;background:rgba(255,255,255,.92);color:var(--acc);border:1.5px solid var(--acc);border-radius:8px;touch-action:none}
+#zoombar button:active{background:#d5ecea}
+#zoombar label.win{width:44px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(255,255,255,.92);border:1.5px solid var(--acc);border-radius:8px;font-size:9.5px;color:var(--acc);font-weight:700;cursor:pointer}
+#zoombar label.win input{width:18px;height:18px;margin:0;accent-color:var(--acc)}
+#zoombar label.win:has(input:checked){background:var(--acc);color:#fff}
 #help{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
 #help .box{background:#fff;border-radius:10px;max-width:660px;width:100%;max-height:92%;overflow:auto;padding:16px 20px}
 #help h2{margin:0 0 4px;font-size:19px}
@@ -56,13 +62,21 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
  #panel{width:100%;height:46%;border-right:0;border-top:1px solid var(--bd)}
  #view{height:54%;flex:none}
  #hint{display:none}
- #rotulo{left:10px;right:10px;max-width:none;text-align:center;font-size:10.5px}
+ #rotulo{font-size:10.5px}
+ #hud{max-width:calc(100% - 114px)}
+ #zoombar{top:calc(50% - 70px)}
 }
 </style>
 </head>
 <body>
 <div id="app">
 <aside id="panel">
+ <div id="viewChecks" style="display:flex;flex-wrap:wrap;gap:4px 12px;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:13px">
+  <label><input type="checkbox" id="showAx" checked> Ejes</label>
+  <label><input type="checkbox" id="showV" checked> Vértices</label>
+  <label><input type="checkbox" id="showW" checked> Malla</label>
+  <label><input type="checkbox" id="flat" checked> Facetado</label>
+ </div>
  <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">Triangularizar</h1><button class="sec" id="btnHelp">? Ayuda</button></div>
  <div class="sub">Esculpe y simplifica mallas triangulares · unidades en mm, eje Z hacia arriba (como Tinkercad)</div>
 
@@ -92,6 +106,8 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
  </div></details>
 
  <details class="card"><summary>3 · Triangulación de la figura actual</summary><div class="body">
+  <div class="row" style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:5px 7px"><label style="flex:1;color:var(--ink)"><input type="checkbox" id="onlySel"> <b>Aplicar solo a la selección</b> <span id="selCount" style="color:var(--mut)">(0 vértices)</span></label></div>
+  <div class="note">Marcada: dividir, subdividir y simplificar actúan solo sobre los vértices seleccionados (se eligen en la sección 4). Sin marcar: sobre toda la figura.</div>
   <b>Refinar (más triángulos)</b>
   <div class="row"><label>Arista máx. (mm)</label><input type="number" id="maxEdge" value="5" min="0.1" step="any"></div>
   <div class="btns"><button id="btnRefine">Dividir aristas largas</button><button class="sec" id="btnSub">Subdividir todo (×4)</button></div>
@@ -99,7 +115,7 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <b>Simplificar (menos triángulos)</b>
   <div class="row"><label>Dejar al (%)</label><input type="number" id="simPct" value="50" min="1" max="99" step="1"></div>
   <div class="btns"><button id="btnSimplify">Simplificar</button></div>
-  <div class="note">Elimina vértices poco a poco, empezando por los que menos cambian la forma, hasta conservar ese % de triángulos.</div>
+  <div class="note">Elimina vértices poco a poco, empezando por los que menos cambian la forma, hasta conservar ese % de triángulos (de la selección, si está marcada la casilla de arriba).</div>
   <hr style="border:0;border-top:1px solid var(--bd)">
   <b>Reconstruir por secciones</b>
   <div class="note">Corta la figura en niveles y coloca N puntos por sección (malla ordenada en anillos). Funciona mejor si cada sección es "estrellada" respecto a su centro.</div>
@@ -133,9 +149,6 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <div class="row"><label style="flex:1"><input type="checkbox" id="boxMode"> Selección por recuadro (arrastrar; en PC también Ctrl + arrastrar)</label></div>
   <div class="row"><label style="flex:1"><input type="checkbox" id="boxHidden"> El recuadro también selecciona vértices de la cara oculta</label></div>
   <div class="note">Clic en un vértice = seleccionar · Mayús+clic = añadir/quitar · Ctrl+arrastrar = recuadro (Ctrl+Mayús suma a la selección). Supr elimina los seleccionados y el hueco se rellena solo.</div>
-  <div class="row"><label style="flex:1"><input type="checkbox" id="showV" checked> Vértices</label>
-   <label style="flex:1"><input type="checkbox" id="showW" checked> Malla</label>
-   <label style="flex:1"><input type="checkbox" id="flat" checked> Facetado</label></div>
   <div class="btns"><button class="sec" id="btnUndo">Deshacer (Ctrl+Z)</button><button class="sec" id="btnReset">Restablecer</button></div>
   <div class="note">Atajos: X, Y, Z = bloquear eje · N = normal · F = libre. Al pasar el ratón se colorea la zona de influencia.</div>
  </div></details>
@@ -146,7 +159,7 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <div class="note">STL binario en mm, listo para importar en Tinkercad.</div>
  </div></details>
 </aside>
-<main id="view"><canvas id="c"></canvas><div id="hud"></div><div id="hint">Arrastra un vértice para moverlo · fondo: girar · rueda: zoom · botón derecho: desplazar</div><div id="busy">Procesando…</div><div id="toast"></div><div id="boxsel"></div><div id="rotulo">IES Santa Engracia - Departamento de Tecnología - S. C. S</div></main>
+<main id="view"><canvas id="c"></canvas><div id="hud"></div><div id="zoombar"><button id="zIn" title="Acercar">+</button><label class="win" title="Seleccionar una ventana de nodos"><input type="checkbox" id="winChk">Ventana</label><button id="zOut" title="Alejar">−</button></div><div id="hint">Arrastra un vértice para moverlo · fondo: girar · rueda: zoom · botón derecho: desplazar</div><div id="busy">Procesando…</div><div id="toast"></div><div id="boxsel"></div><div id="rotulo">IES Santa Engracia - Departamento de Tecnología - S. C. S</div></main>
 </div>
 
 <div id="help"><div class="box">
@@ -158,7 +171,7 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
  <ul>
   <li><b>1 · Figura base:</b> elige cilindro, cono o prisma, ajusta medidas, nº de secciones y puntos por sección y pulsa <i>Generar figura</i>. La tabla de secciones permite cambiar cada nivel (altura, ancho, fondo y puntos).</li>
   <li><b>2 · Importar STL</b> (opcional): carga una figura existente (binario o ASCII).</li>
-  <li><b>3 · Triangulación:</b> <i>dividir aristas largas</i> (más detalle), <i>simplificar</i> (menos triángulos), <i>reconstruir por secciones</i> o <i>suavizar</i>.</li>
+  <li><b>3 · Triangulación:</b> <i>dividir aristas largas</i> o <i>subdividir</i> (más triángulos), <i>simplificar</i> (menos), <i>reconstruir por secciones</i> o <i>suavizar</i>. Con <i>Aplicar solo a la selección</i> marcada, dividir, subdividir y simplificar actúan únicamente sobre los vértices seleccionados.</li>
   <li><b>4 · Esculpir</b> los vértices y <b>5 · Exportar</b> el STL.</li>
  </ul>
  <h3>Esculpir vértices</h3>
@@ -174,10 +187,12 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <li><kbd>Ctrl</kbd>+arrastrar dibuja un recuadro y selecciona los vértices visibles que quedan dentro (<kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+arrastrar suma a la selección). En pantallas táctiles activa <i>Selección por recuadro</i>.</li>
   <li><i>Eliminar seleccionados</i> o la tecla <kbd>Supr</kbd> quita los vértices y rellena el hueco. Si un vértice sostiene una arista viva, puede que no se elimine para no deformar la figura.</li>
  </ul>
+ <h3>Más o menos nodos en una zona</h3>
+ <p>Selecciona los vértices de la zona (clic, <kbd>Mayús</kbd>+clic o recuadro), marca <i>Aplicar solo a la selección</i> en la sección 3 y pulsa <i>Dividir aristas largas</i> o <i>Subdividir selección</i> para añadir nodos, o <i>Simplificar selección</i> para quitarlos. Los vértices de alrededor no se tocan y la malla sigue cerrada. La selección se conserva (incluidos los nodos nuevos) para repetir la operación.</p>
  <h3>Simplificar</h3>
  <p>Indica el % de triángulos que quieres conservar y pulsa <i>Simplificar</i>. Con 100 % no cambia nada; cuanto menor sea, más se simplifica. Se pueden deshacer los pasos con <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</p>
- <h3>Vista</h3>
- <p>Fuera de la figura: arrastrar = girar · rueda o pellizco = zoom · botón derecho o dos dedos = desplazar. Si desactivas <i>Modo edición</i> solo mueves la vista.</p>
+ <h3>Vista y ejes</h3>
+ <p>Los ejes parten del origen de coordenadas del modelo: <b style="color:#e53935">X rojo</b>, <b style="color:#2e9e44">Y verde</b> y <b style="color:#1e6fe8">Z azul</b> (vertical). Se ven también a través de la figura, más tenues, y se ocultan con la casilla <i>Ejes</i>. Fuera de la figura: arrastrar = girar · rueda o pellizco = zoom · botón derecho o dos dedos = desplazar. Si desactivas <i>Modo edición</i> solo mueves la vista.</p>
  <h3>Consejos para una ficha de ajedrez</h3>
  <ul>
   <li>Empieza con 12–16 secciones y 24–32 puntos por sección, y usa la simetría para esculpir el cuello y la cabeza.</li>
@@ -1364,14 +1379,20 @@ function makeSTL(pos,idx){
 }
 
 /* ---------- Refinado por aristas largas (sin T-vértices) ---------- */
-function refineMesh(pos,idx,L,maxTris=400000){
+// sel (opcional): conjunto de vértices. Solo se dividen las aristas con sus dos extremos seleccionados
+// (si no hay ninguna así, las que tocan algún vértice seleccionado). Los puntos medios nuevos entre dos vértices
+// seleccionados pasan a formar parte de la selección (se devuelve en r.sel). La malla sigue sin T-vértices.
+function refineMesh(pos,idx,L,maxTris=400000,sel=null){
   const P=Array.from(pos); let T=Array.from(idx);
+  const SS=sel?new Set(sel):null; let both=true;
+  if(SS){ both=false; for(let t=0;t<T.length&&!both;t+=3) for(let k=0;k<3;k++) if(SS.has(T[t+k])&&SS.has(T[t+(k+1)%3])){both=true;break;} }
+  const edgeOK=(a,b)=>!SS||(both?(SS.has(a)&&SS.has(b)):(SS.has(a)||SS.has(b)));
   for(let pass=0;pass<14;pass++){
     if(T.length/3>maxTris) break;
     const mid=new Map(), L2=L*L; let changed=false;
-    const isLong=(a,b)=>{ if(L<=0) return true; const dx=P[3*a]-P[3*b],dy=P[3*a+1]-P[3*b+1],dz=P[3*a+2]-P[3*b+2]; return dx*dx+dy*dy+dz*dz>L2; };
+    const isLong=(a,b)=>{ if(!edgeOK(a,b)) return false; if(L<=0) return true; const dx=P[3*a]-P[3*b],dy=P[3*a+1]-P[3*b+1],dz=P[3*a+2]-P[3*b+2]; return dx*dx+dy*dy+dz*dz>L2; };
     const midOf=(a,b)=>{ const k=a<b?a*4294967296+b:b*4294967296+a; let m=mid.get(k);
-      if(m===undefined){ m=P.length/3; P.push((P[3*a]+P[3*b])/2,(P[3*a+1]+P[3*b+1])/2,(P[3*a+2]+P[3*b+2])/2); mid.set(k,m);} return m; };
+      if(m===undefined){ m=P.length/3; P.push((P[3*a]+P[3*b])/2,(P[3*a+1]+P[3*b+1])/2,(P[3*a+2]+P[3*b+2])/2); mid.set(k,m); if(SS&&SS.has(a)&&SS.has(b)) SS.add(m);} return m; };
     const d2=(a,b)=>{const dx=P[3*a]-P[3*b],dy=P[3*a+1]-P[3*b+1],dz=P[3*a+2]-P[3*b+2];return dx*dx+dy*dy+dz*dz;};
     const NT=[];
     for(let t=0;t<T.length;t+=3){
@@ -1391,7 +1412,7 @@ function refineMesh(pos,idx,L,maxTris=400000){
     }
     T=NT; if(!changed||L<=0) break;
   }
-  return {pos:Float32Array.from(P),idx:Uint32Array.from(T)};
+  return {pos:Float32Array.from(P),idx:Uint32Array.from(T),sel:SS};
 }
 
 /* ---------- Reconstrucción por secciones de una malla cualquiera ---------- */
@@ -1535,7 +1556,7 @@ function makeCollapser(pos,idx){
     const map=new Int32Array(n).fill(-1), P=[], F=[];
     for(let t=0;t<nt;t++){ if(!alive[t]) continue;
       for(let k=0;k<3;k++){ const x=T[3*t+k]; if(map[x]<0){map[x]=P.length/3;P.push(pos[3*x],pos[3*x+1],pos[3*x+2]);} F.push(map[x]); } }
-    return {pos:Float32Array.from(P),idx:Uint32Array.from(F)};
+    return {pos:Float32Array.from(P),idx:Uint32Array.from(F),map};
   }
   return {evalVertex,collapse,finish,nbrs,gone,tris:()=>alt};
 }
@@ -1551,16 +1572,18 @@ function removeVertices(pos,idx,list){
   const r=c.finish(); r.removed=removed; r.failed=failed; return r;
 }
 // Simplifica la malla hasta ~targetTris triángulos, quitando primero los vértices que menos cambian la forma.
-function simplifyMesh(pos,idx,targetTris){
+// sel (opcional): solo se eliminan vértices de la selección (los demás nunca se mueven). r.map = índice viejo -> nuevo (-1 si desaparece).
+function simplifyMesh(pos,idx,targetTris,sel=null){
   const c=makeCollapser(pos,idx), h=new Heap(), n=pos.length/3; let removed=0;
-  for(let v=0;v<n;v++){ const e=c.evalVertex(v); if(e) h.push(e.cost,v); }
+  const okv=v=>!sel||sel.has(v);
+  for(let v=0;v<n;v++){ if(!okv(v)) continue; const e=c.evalVertex(v); if(e) h.push(e.cost,v); }
   while(h.size&&c.tris()>targetTris){
     const [d,v]=h.pop(); if(c.gone[v]) continue;
     const e=c.evalVertex(v); if(!e) continue;
     if(e.cost>d+1e-9){ h.push(e.cost,v); continue; }
     const nb=[...c.nbrs(v)];
     c.collapse(v,e.u); removed++;
-    for(const w of nb){ if(w===v||c.gone[w]) continue; const ew=c.evalVertex(w); if(ew) h.push(ew.cost,w); }
+    for(const w of nb){ if(w===v||c.gone[w]||!okv(w)) continue; const ew=c.evalVertex(w); if(ew) h.push(ew.cost,w); }
   }
   const r=c.finish(); r.removed=removed; return r;
 }
@@ -1573,7 +1596,7 @@ function setAppHeight(){ document.documentElement.style.setProperty('--app-heigh
 setAppHeight(); window.addEventListener('resize',setAppHeight);
 const S={sel:new Set(),pos:null,idx:null,initial:null,undo:[],adj:null,dist:null,wTmp:null,painted:[],radius:8,diag:100,symC:[0,0],bbox:null};
 const ui={};
-['shape','pW','pD','pH','pTop','pLev','pPts','file','center','maxEdge','rAxis','rLev','rPts','rList','sIter','edit','prop','radius','radiusVal','prof','axis','sym','selArea','boxMode','boxHidden','simPct','showV','showW','flat','fname'].forEach(k=>ui[k]=$(k));
+['shape','pW','pD','pH','pTop','pLev','pPts','file','center','maxEdge','rAxis','rLev','rPts','rList','sIter','edit','prop','radius','radiusVal','prof','axis','sym','selArea','boxMode','boxHidden','simPct','onlySel','showAx','showV','showW','flat','fname'].forEach(k=>ui[k]=$(k));
 
 const canvas=$('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
@@ -1601,6 +1624,38 @@ meshSolid.frustumCulled=meshWire.frustumCulled=points.frustumCulled=false;
 scene.add(meshSolid,meshWire,points);
 const marker=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshBasicMaterial({color:0xf97316,depthTest:false}));
 marker.renderOrder=10; marker.visible=false; scene.add(marker);
+/* ---------- Ejes XYZ: indicador fijo en la esquina inferior izquierda (X rojo, Y verde, Z azul) ---------- */
+const AXD=[{k:0,col:0xe53935,css:'#e53935',t:'X'},{k:1,col:0x2e9e44,css:'#2e9e44',t:'Y'},{k:2,col:0x1e6fe8,css:'#1e6fe8',t:'Z'}];
+function axisLabel(txt,css){
+  const c=document.createElement('canvas'); c.width=c.height=96; const g=c.getContext('2d');
+  g.font='bold 64px system-ui,Arial,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+  g.lineWidth=10; g.strokeStyle='#fff'; g.strokeText(txt,48,52); g.fillStyle=css; g.fillText(txt,48,52);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));
+  sp.renderOrder=12; return sp;
+}
+const gScene=new THREE.Scene(), gCam=new THREE.PerspectiveCamera(32,1,0.1,50);
+let gizmoOn=true;
+(function(){
+  const len=1, r=0.05, ch=0.3;
+  for(const a of AXD){
+    const g=new THREE.Group(), mat=new THREE.MeshBasicMaterial({color:a.col});
+    const rod=new THREE.CylinderGeometry(r,r,len-ch,12); rod.translate(0,(len-ch)/2,0);
+    const cone=new THREE.ConeGeometry(r*3,ch,16); cone.translate(0,len-ch/2,0);
+    g.add(new THREE.Mesh(rod,mat),new THREE.Mesh(cone,mat));
+    if(a.k===0) g.rotation.z=-Math.PI/2; else if(a.k===2) g.rotation.x=Math.PI/2;
+    gScene.add(g);
+    const sp=axisLabel(a.t,a.css); sp.scale.setScalar(0.5); const p=[0,0,0]; p[a.k]=len+0.3; sp.position.set(p[0],p[1],p[2]); gScene.add(sp);
+  }
+})();
+function renderGizmo(){
+  if(!gizmoOn) return;
+  const v=$('view'), s=v.clientWidth<=820?96:120;
+  gCam.position.copy(camera.position).sub(controls.target).normalize().multiplyScalar(5.2);
+  gCam.up.copy(camera.up); gCam.lookAt(0,0,0);
+  renderer.autoClear=false; renderer.setScissorTest(true);
+  renderer.setViewport(6,6,s,s); renderer.setScissor(6,6,s,s); renderer.clearDepth(); renderer.render(gScene,gCam);
+  renderer.setScissorTest(false); renderer.setViewport(0,0,v.clientWidth,v.clientHeight); renderer.autoClear=true;
+}
 const selGeom=new THREE.BufferGeometry();
 const selPoints=new THREE.Points(selGeom,new THREE.PointsMaterial({color:0xf97316,size:12,sizeAttenuation:false,depthTest:false}));
 selPoints.renderOrder=11; selPoints.frustumCulled=false; scene.add(selPoints);
@@ -1610,7 +1665,18 @@ function updateSelDisplay(){
   else { const a=new Float32Array(ids.length*3); ids.forEach((v,i)=>{a[3*i]=S.pos[3*v];a[3*i+1]=S.pos[3*v+1];a[3*i+2]=S.pos[3*v+2];});
     selGeom.dispose(); selGeom.setAttribute('position',new THREE.BufferAttribute(a,3)); }
   $('btnDel').textContent='Eliminar seleccionados ('+ids.length+')';
+  updateScope();
 }
+// Ámbito de las operaciones de la sección 3: null = toda la figura; Set = solo esos vértices
+function scopeSel(){ return ui.onlySel.checked?S.sel:null; }
+function updateScope(){
+  const on=ui.onlySel.checked, n=S.sel.size;
+  $('selCount').textContent='('+n+' vértice'+(n===1?'':'s')+' seleccionado'+(n===1?'':'s')+')';
+  $('btnRefine').textContent=on?'Dividir aristas largas · selección':'Dividir aristas largas';
+  $('btnSub').textContent=on?'Subdividir selección (×4)':'Subdividir todo (×4)';
+  $('btnSimplify').textContent=on?'Simplificar selección':'Simplificar';
+}
+const NOSEL='Selecciona primero uno o más vértices (sección 4) o desmarca «Aplicar solo a la selección».';
 function selectVertex(v,shift,area){
   const ids=area||[v];
   if(shift){ const allIn=ids.every(i=>S.sel.has(i)); ids.forEach(i=>allIn?S.sel.delete(i):S.sel.add(i)); }
@@ -1637,7 +1703,7 @@ function resize(){
   renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe($('view')); window.addEventListener('resize',resize);
-(function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
+(function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); renderGizmo(); })();
 
 /* ---------- Modelo ---------- */
 function bboxOf(p){
@@ -1677,7 +1743,7 @@ function updateRadiusLabel(){ ui.radiusVal.textContent=(+S.radius).toFixed(1)+' 
 function frameView(){
   const b=bboxOf(S.pos); S.bbox=b; const c=[0,1,2].map(k=>(b.mn[k]+b.mx[k])/2), d=b.diag;
   controls.target.set(c[0],c[1],c[2]);
-  camera.position.set(c[0]+d*0.9,c[1]-d*1.3,c[2]+d*0.8);
+  camera.position.set(c[0]+d*1.05,c[1]-d*1.5,c[2]+d*0.95);
   camera.near=d/500; camera.far=d*60; camera.updateProjectionMatrix(); controls.update();
   if(grid){scene.remove(grid);grid.geometry.dispose();}
   const gs=Math.max(20,Math.ceil(d*2/10)*10);
@@ -1749,8 +1815,23 @@ ui.file.addEventListener('click',e=>{ if(window.AndroidBridge){ e.preventDefault
 window.onNativeStl=(b64,name)=>{ const bin=atob(b64), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); loadSTLBuffer(u.buffer,name); };
 
 /* ---------- Triangulación ---------- */
-$('btnRefine').onclick=()=>busy(()=>{ const L=Math.max(0.05,+ui.maxEdge.value); pushUndo(); const r=refineMesh(S.pos,S.idx,L); setMesh(r.pos,r.idx); });
-$('btnSub').onclick=()=>busy(()=>{ if(S.idx.length/3>100000){alert('La malla ya es muy densa.');return;} pushUndo(); const r=refineMesh(S.pos,S.idx,0); setMesh(r.pos,r.idx); });
+$('btnRefine').onclick=()=>busy(()=>{
+  const L=Math.max(0.05,+ui.maxEdge.value), sel=scopeSel();
+  if(sel&&!sel.size){ toast(NOSEL); return; }
+  const T0=S.idx.length/3; const r=refineMesh(S.pos,S.idx,L,400000,sel);
+  if(r.idx.length/3===T0){ toast('No hay aristas más largas que '+L+' mm'+(sel?' en la selección.':'.')); return; }
+  pushUndo(); setMesh(r.pos,r.idx); if(sel){ S.sel=r.sel; updateSelDisplay(); }
+  toast('Triángulos: '+T0+' → '+(r.idx.length/3));
+});
+$('btnSub').onclick=()=>busy(()=>{
+  const sel=scopeSel(), T0=S.idx.length/3;
+  if(sel&&!sel.size){ toast(NOSEL); return; }
+  if(T0>(sel?300000:100000)){ alert('La malla ya es muy densa.'); return; }
+  const r=refineMesh(S.pos,S.idx,0,400000,sel);
+  if(r.idx.length/3===T0){ toast('Nada que subdividir con esa selección.'); return; }
+  pushUndo(); setMesh(r.pos,r.idx); if(sel){ S.sel=r.sel; updateSelDisplay(); }
+  toast('Triángulos: '+T0+' → '+(r.idx.length/3));
+});
 $('btnRemesh').onclick=()=>busy(()=>{
   const N=Math.max(2,Math.round(+ui.rLev.value)), M=Math.max(3,Math.round(+ui.rPts.value)), eps=0.003; let fr=[];
   const txt=ui.rList.value.trim();
@@ -1923,15 +2004,40 @@ canvas.addEventListener('pointerleave',()=>{ if(!drag){marker.visible=false;pain
 /* ---------- Controles ---------- */
 ui.radius.oninput=()=>{ S.radius=+ui.radius.value; updateRadiusLabel(); };
 ui.showV.onchange=()=>points.visible=ui.showV.checked;
+ui.showAx.onchange=()=>{ gizmoOn=ui.showAx.checked; };
+// Botones del lado izquierdo de la vista: zoom + / − y casilla de selección por ventana (útil en el móvil)
+$('winChk').onchange=()=>{ ui.boxMode.checked=$('winChk').checked; };
+ui.boxMode.addEventListener('change',()=>{ $('winChk').checked=ui.boxMode.checked; });
+function zoomBy(f){
+  const o=camera.position.clone().sub(controls.target), L=o.length()*f;
+  const lo=controls.minDistance||0, hi=isFinite(controls.maxDistance)?controls.maxDistance:Infinity;
+  o.setLength(Math.min(Math.max(L,lo,1e-3),hi)); camera.position.copy(controls.target).add(o); controls.update();
+}
+(function(){
+  for(const [id,f] of [['zIn',0.85],['zOut',1/0.85]]){
+    const b=$(id); let t=0,iv=0;
+    const stop=()=>{ clearTimeout(t); clearInterval(iv); };
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); zoomBy(f); t=setTimeout(()=>{ iv=setInterval(()=>zoomBy(f),70); },350); });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+  }
+})();
+ui.onlySel.onchange=updateScope;
 ui.showW.onchange=()=>meshWire.visible=ui.showW.checked;
 ui.flat.onchange=()=>{ matSolid.flatShading=ui.flat.checked; matSolid.needsUpdate=true; };
 $('btnUndo').onclick=undo;
 $('btnSimplify').onclick=()=>busy(()=>{
-  const pct=Math.min(99,Math.max(1,+ui.simPct.value||50)), T=S.idx.length/3, target=Math.max(4,Math.round(T*pct/100));
+  const pct=Math.min(99,Math.max(1,+ui.simPct.value||50)), T=S.idx.length/3, sel=scopeSel();
+  if(sel&&!sel.size){ toast(NOSEL); return; }
+  let target;
+  if(sel){ // % de triángulos de la zona seleccionada (los que tienen sus 3 vértices seleccionados; si no hay, los que tocan la selección)
+    let all3=0,any1=0; for(let t=0;t<S.idx.length;t+=3){ const c=(sel.has(S.idx[t])?1:0)+(sel.has(S.idx[t+1])?1:0)+(sel.has(S.idx[t+2])?1:0); if(c===3) all3++; if(c>=1) any1++; }
+    target=Math.max(4,T-Math.round((all3||any1)*(1-pct/100)));
+  } else target=Math.max(4,Math.round(T*pct/100));
   if(target>=T){ toast('Ya tiene menos triángulos que ese objetivo.'); return; }
-  pushUndo(); const r=simplifyMesh(S.pos,S.idx,target), nT=r.idx.length/3;
-  if(!r.removed){ S.undo.pop(); toast('No se pudo simplificar más sin deformar la malla.'); return; }
-  setMesh(r.pos,r.idx);
+  const r=simplifyMesh(S.pos,S.idx,target,sel), nT=r.idx.length/3;
+  if(!r.removed){ toast('No se pudo simplificar más sin deformar la malla.'); return; }
+  pushUndo(); setMesh(r.pos,r.idx);
+  if(sel){ const ns=new Set(); for(const v of sel){ const m=r.map[v]; if(m>=0) ns.add(m); } S.sel=ns; updateSelDisplay(); }
   toast('Triángulos: '+T+' → '+nT+(nT>target*1.05?' (no se pudo bajar más sin deformar la malla)':''));
 });
 $('btnHelp').onclick=()=>$('help').style.display='flex';
