@@ -36,12 +36,18 @@ th{color:var(--mut);font-weight:600;text-align:center;padding:2px}
 td{padding:1px}
 td input{width:100%;padding:3px;border:1px solid var(--bd);border-radius:4px;font:inherit}
 td.n{width:22px;text-align:center;color:var(--mut)}
-#hud{position:absolute;right:10px;bottom:10px;max-width:calc(100% - 140px);text-align:right;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:12px;pointer-events:none}
+#stats{margin-left:auto;font-size:12px;color:var(--ink);text-align:right}
+#rbar{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;z-index:4;user-select:none;-webkit-user-select:none}
+#nudge{display:flex;gap:6px;align-items:center}
+#nudge button{width:44px;height:44px;padding:0;font-size:18px;font-weight:700;background:rgba(255,255,255,.92);color:var(--acc);border:1.5px solid var(--acc);border-radius:8px;text-transform:none}
+#nudge button.on{background:var(--acc);color:#fff}
+#nStepW{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mut);background:rgba(255,255,255,.92);border:1px solid var(--bd);border-radius:6px;padding:2px 6px}
+#nStep{width:52px;padding:2px 3px;border:1px solid var(--bd);border-radius:4px;font:inherit}
 #hint{position:absolute;left:10px;top:48px;background:rgba(255,255,255,.88);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;font-size:12px;color:var(--mut);pointer-events:none}
 #toast{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);background:#1d2733;color:#fff;padding:7px 12px;border-radius:6px;font-size:13px;display:none;max-width:80%;text-align:center}
 #boxsel{position:absolute;border:1.5px dashed #0f766e;background:rgba(15,118,110,.14);display:none;pointer-events:none;z-index:5}
 #rotulo{position:absolute;left:10px;right:10px;top:10px;text-align:center;background:rgba(15,61,58,.93);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;pointer-events:none;}
-#zoombar{position:absolute;left:10px;top:calc(50% - 80px);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:4;user-select:none;-webkit-user-select:none;touch-action:none}
+#zoombar{display:flex;flex-direction:column;gap:8px;align-items:center;z-index:4;user-select:none;-webkit-user-select:none;touch-action:none}
 #zoombar button{width:44px;height:44px;padding:0;font-size:26px;line-height:1;font-weight:700;background:rgba(255,255,255,.92);color:var(--acc);border:1.5px solid var(--acc);border-radius:8px;touch-action:none}
 #zoombar button:active{background:#d5ecea}
 #zoombar label.win{width:44px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(255,255,255,.92);border:1.5px solid var(--acc);border-radius:8px;font-size:9.5px;color:var(--acc);font-weight:700;cursor:pointer}
@@ -63,8 +69,6 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
  #view{height:54%;flex:none}
  #hint{display:none}
  #rotulo{font-size:10.5px}
- #hud{max-width:calc(100% - 114px)}
- #zoombar{top:calc(50% - 70px)}
 }
 </style>
 </head>
@@ -76,6 +80,7 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <label><input type="checkbox" id="showV" checked> Vértices</label>
   <label><input type="checkbox" id="showW" checked> Malla</label>
   <label><input type="checkbox" id="flat" checked> Facetado</label>
+  <span id="stats"></span>
  </div>
  <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">Triangularizar</h1><button class="sec" id="btnHelp">? Ayuda</button></div>
  <div class="sub">Esculpe y simplifica mallas triangulares · unidades en mm, eje Z hacia arriba (como Tinkercad)</div>
@@ -145,6 +150,7 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
     <option value="x">Eje X</option><option value="y">Eje Y</option><option value="z">Eje Z</option></select></div>
   <div class="row"><label>Simetría</label><select id="sym"><option value="none">Ninguna</option><option value="x">Espejo en X</option><option value="y">Espejo en Y</option></select></div>
   <div class="row"><label style="flex:1"><input type="checkbox" id="selArea"> Al hacer clic, seleccionar toda la zona de influencia</label></div>
+  <div class="btns"><button class="sec" id="btnSmoothSel" title="Redondea los vértices seleccionados acercándolos a la media de sus vértices adyacentes">Suavizar Vertices</button></div>
   <div class="btns"><button id="btnDel" style="background:#b91c1c;border-color:#b91c1c">Eliminar seleccionados (0)</button><button class="sec" id="btnSelClear">Quitar selección</button></div>
   <div class="row"><label style="flex:1"><input type="checkbox" id="boxMode"> Selección por recuadro (arrastrar; en PC también Ctrl + arrastrar)</label></div>
   <div class="row"><label style="flex:1"><input type="checkbox" id="boxHidden"> El recuadro también selecciona vértices de la cara oculta</label></div>
@@ -159,7 +165,9 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
   <div class="note">STL binario en mm, listo para importar en Tinkercad.</div>
  </div></details>
 </aside>
-<main id="view"><canvas id="c"></canvas><div id="hud"></div><div id="zoombar"><button id="zIn" title="Acercar">+</button><label class="win" title="Seleccionar una ventana de nodos"><input type="checkbox" id="winChk">Ventana</label><button id="zOut" title="Alejar">−</button></div><div id="hint">Arrastra un vértice para moverlo · fondo: girar · rueda: zoom · botón derecho: desplazar</div><div id="busy">Procesando…</div><div id="toast"></div><div id="boxsel"></div><div id="rotulo">IES Santa Engracia - Departamento de Tecnología - S. C. S</div></main>
+<main id="view"><canvas id="c"></canvas><div id="rbar"><div id="zoombar"><button id="zIn" title="Acercar">+</button><label class="win" title="Seleccionar una ventana de nodos"><input type="checkbox" id="winChk">Ventana</label><button id="zOut" title="Alejar">−</button></div>
+<div id="nStepW" title="Paso de cada pulsación de + / − con X, Y, Z o N activo">Paso <input type="number" id="nStep" value="1" min="0.01" step="0.5"> mm</div>
+<div id="nudge"><button data-n="x" title="Mover la selección en X con + / −">x</button><button data-n="y" title="Mover la selección en Y con + / −">y</button><button data-n="z" title="Mover la selección en Z con + / −">z</button><button data-n="n" title="Mover la selección según la normal a la superficie con + / −">N</button></div></div><div id="hint">Arrastra un vértice para moverlo · fondo: girar · rueda: zoom · botón derecho: desplazar</div><div id="busy">Procesando…</div><div id="toast"></div><div id="boxsel"></div><div id="rotulo">IES Santa Engracia - Departamento de Tecnología - S. C. S</div></main>
 </div>
 
 <div id="help"><div class="box">
@@ -191,6 +199,10 @@ kbd{background:#eef2f6;border:1px solid var(--bd);border-bottom-width:2px;border
  <p>Selecciona los vértices de la zona (clic, <kbd>Mayús</kbd>+clic o recuadro), marca <i>Aplicar solo a la selección</i> en la sección 3 y pulsa <i>Dividir aristas largas</i> o <i>Subdividir selección</i> para añadir nodos, o <i>Simplificar selección</i> para quitarlos. Los vértices de alrededor no se tocan y la malla sigue cerrada. La selección se conserva (incluidos los nodos nuevos) para repetir la operación.</p>
  <h3>Simplificar</h3>
  <p>Indica el % de triángulos que quieres conservar y pulsa <i>Simplificar</i>. Con 100 % no cambia nada; cuanto menor sea, más se simplifica. Se pueden deshacer los pasos con <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</p>
+ <h3>Mover la selección con x / y / z / N</h3>
+ <p>Abajo a la derecha de la vista hay cuatro recuadros: <b>x</b>, <b>y</b>, <b>z</b> y <b>N</b> (normal a la superficie). Pulsa uno para activarlo (otra pulsación lo desactiva). Mientras está activo, las teclas <kbd>+</kbd> / <kbd>−</kbd> o los botones + / − de la vista dejan de hacer zoom y suben o bajan esa coordenada en <b>todos los vértices seleccionados</b>, tantos mm como indique «Paso». Se puede deshacer con «Deshacer».</p>
+ <h3>Suavizar vértices</h3>
+ <p>El botón «Suavizar Vertices» (sección 4, sobre «Eliminar seleccionados») redondea la selección: cada vértice seleccionado se acerca a la media de sus vértices adyacentes. Usa el nº de iteraciones de «Suavizar malla»; los vértices no seleccionados no se mueven.</p>
  <h3>Vista y ejes</h3>
  <p>Los ejes parten del origen de coordenadas del modelo: <b style="color:#e53935">X rojo</b>, <b style="color:#2e9e44">Y verde</b> y <b style="color:#1e6fe8">Z azul</b> (vertical). Se ven también a través de la figura, más tenues, y se ocultan con la casilla <i>Ejes</i>. Fuera de la figura: arrastrar = girar · rueda o pellizco = zoom · botón derecho o dos dedos = desplazar. Si desactivas <i>Modo edición</i> solo mueves la vista.</p>
  <h3>Consejos para una ficha de ajedrez</h3>
@@ -1496,6 +1508,18 @@ function smoothMesh(pos,adj,iters,idx){
   }
   return src;
 }
+// Redondeo local: solo los vértices de 'sel' se acercan a la media de sus adyacentes (los demás no se mueven)
+function smoothSel(pos,adj,sel,iters,lam=0.5){
+  let src=Float32Array.from(pos); const ids=[...sel];
+  for(let it=0;it<iters;it++){
+    const dst=Float32Array.from(src);
+    for(const i of ids){ const nb=adj[i], k=nb.length; if(!k) continue; let ax=0,ay=0,az=0;
+      for(const j of nb){ax+=src[3*j];ay+=src[3*j+1];az+=src[3*j+2];}
+      dst[3*i]=src[3*i]+lam*(ax/k-src[3*i]); dst[3*i+1]=src[3*i+1]+lam*(ay/k-src[3*i+1]); dst[3*i+2]=src[3*i+2]+lam*(az/k-src[3*i+2]); }
+    src=dst;
+  }
+  return src;
+}
 function meshStats(pos,idx){
   const edges=new Map();
   for(let t=0;t<idx.length;t+=3) for(let k=0;k<3;k++){
@@ -1587,7 +1611,7 @@ function simplifyMesh(pos,idx,targetTris,sel=null){
   }
   const r=c.finish(); r.removed=removed; return r;
 }
-if(typeof module!=='undefined') module.exports={tri,stitch,ringsFromRows,buildLoft,signedVolume,ensureOutward,parseSTL,weld,makeSTL,refineMesh,sectionRemesh,buildAdj,Heap,smoothMesh,meshStats,removeVertices,simplifyMesh};
+if(typeof module!=='undefined') module.exports={tri,stitch,ringsFromRows,buildLoft,signedVolume,ensureOutward,parseSTL,weld,makeSTL,refineMesh,sectionRemesh,buildAdj,Heap,smoothMesh,smoothSel,meshStats,removeVertices,simplifyMesh};
 //#CORE-END
 
 /* ===================== INTERFAZ Y ESCENA ===================== */
@@ -1753,8 +1777,7 @@ function frameView(){
 function updateStats(full){
   const b=bboxOf(S.pos); S.bbox=b;
   if(full){ const st=meshStats(S.pos,S.idx); S.closedTxt=(st.open===0&&st.nonman===0)?'<span class="ok">cerrada ✓</span>':'<span class="warn">no estanca ('+(st.open+st.nonman)+' aristas)</span>'; }
-  $('hud').innerHTML=(S.pos.length/3)+' vértices · '+(S.idx.length/3)+' triángulos · '+S.closedTxt+'<br>'+
-    (b.mx[0]-b.mn[0]).toFixed(1)+' × '+(b.mx[1]-b.mn[1]).toFixed(1)+' × '+(b.mx[2]-b.mn[2]).toFixed(1)+' mm';
+  $('stats').innerHTML=(S.pos.length/3)+' vértices · '+(S.idx.length/3)+' triángulos · '+S.closedTxt;
 }
 function getAdj(){ if(!S.adj) S.adj=buildAdj(S.pos.length/3,S.idx); return S.adj; }
 function pushUndo(){ S.undo.push({pos:S.pos.slice(),idx:S.idx}); if(S.undo.length>30) S.undo.shift(); }
@@ -2008,6 +2031,24 @@ ui.showAx.onchange=()=>{ gizmoOn=ui.showAx.checked; };
 // Botones del lado izquierdo de la vista: zoom + / − y casilla de selección por ventana (útil en el móvil)
 $('winChk').onchange=()=>{ ui.boxMode.checked=$('winChk').checked; };
 ui.boxMode.addEventListener('change',()=>{ $('winChk').checked=ui.boxMode.checked; });
+// Mover la selección con + / − cuando hay una casilla x / y / z / N activa
+let nudgeAxis=null;
+document.querySelectorAll('#nudge button').forEach(b=>b.addEventListener('click',()=>{
+  nudgeAxis=(nudgeAxis===b.dataset.n)?null:b.dataset.n;
+  document.querySelectorAll('#nudge button').forEach(x=>x.classList.toggle('on',x.dataset.n===nudgeAxis));
+  $('zIn').title=nudgeAxis?'Subir coordenada ('+nudgeAxis.toUpperCase()+')':'Acercar'; $('zOut').title=nudgeAxis?'Bajar coordenada ('+nudgeAxis.toUpperCase()+')':'Alejar';
+  if(nudgeAxis) toast('Eje '+nudgeAxis.toUpperCase()+' activo: + y − (o los botones de zoom) mueven la selección'+(S.sel.size?'':'. Primero selecciona vértices.'));
+}));
+function nudgeSel(sign,fresh){
+  if(!S.sel.size){ toast(NOSEL); return; }
+  const st=Math.max(0.001,+$('nStep').value||1)*sign; if(fresh) pushUndo();
+  const nm=geom.attributes.normal.array;
+  for(const v of S.sel){
+    if(nudgeAxis==='n'){ const l=Math.hypot(nm[3*v],nm[3*v+1],nm[3*v+2])||1; for(let k=0;k<3;k++) S.pos[3*v+k]+=st*nm[3*v+k]/l; }
+    else S.pos[3*v+(nudgeAxis==='x'?0:nudgeAxis==='y'?1:2)]+=st;
+  }
+  setMesh(S.pos,S.idx);
+}
 function zoomBy(f){
   const o=camera.position.clone().sub(controls.target), L=o.length()*f;
   const lo=controls.minDistance||0, hi=isFinite(controls.maxDistance)?controls.maxDistance:Infinity;
@@ -2017,7 +2058,8 @@ function zoomBy(f){
   for(const [id,f] of [['zIn',0.85],['zOut',1/0.85]]){
     const b=$(id); let t=0,iv=0;
     const stop=()=>{ clearTimeout(t); clearInterval(iv); };
-    b.addEventListener('pointerdown',e=>{ e.preventDefault(); zoomBy(f); t=setTimeout(()=>{ iv=setInterval(()=>zoomBy(f),70); },350); });
+    const go=fresh=>nudgeAxis?nudgeSel(f<1?1:-1,fresh):zoomBy(f);
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); go(true); t=setTimeout(()=>{ iv=setInterval(()=>go(false),nudgeAxis?120:70); },350); });
     ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
   }
 })();
@@ -2045,6 +2087,10 @@ $('helpClose').onclick=()=>$('help').style.display='none';
 $('help').addEventListener('click',e=>{ if(e.target===$('help')) $('help').style.display='none'; });
 window.addEventListener('keydown',e=>{ if(e.key==='Escape') $('help').style.display='none'; });
 $('btnDel').onclick=deleteSelected;
+$('btnSmoothSel').onclick=()=>{
+  if(!S.sel.size){ toast(NOSEL); return; }
+  busy(()=>{ pushUndo(); const it=Math.max(1,Math.round(+ui.sIter.value)||1); setMesh(smoothSel(S.pos,getAdj(),S.sel,it),S.idx); toast('Suavizados '+S.sel.size+' vértices ('+it+(it===1?' iteración':' iteraciones')+')'); });
+};
 $('btnSelClear').onclick=()=>{ S.sel.clear(); updateSelDisplay(); };
 $('btnReset').onclick=()=>{ if(!S.initial) return; pushUndo(); setMesh(S.initial.pos.slice(),S.initial.idx); };
 window.addEventListener('keydown',e=>{
@@ -2052,6 +2098,7 @@ window.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
   if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); deleteSelected(); return; }
   if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(nudgeAxis&&['+','=','-','_'].includes(e.key)){ e.preventDefault(); nudgeSel(e.key==='+'||e.key==='='?1:-1,!e.repeat); return; }
   const m={x:'x',y:'y',z:'z',n:'normal',f:'free'}[e.key.toLowerCase()]; if(m) ui.axis.value=m;
 });
 $('btnExport').onclick=()=>{
